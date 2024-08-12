@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import createHttpError from "http-errors";
 import userModel from "./userModel";
 import bcrypt from "bcrypt";
+import { sign } from "jsonwebtoken";
+import { config } from "../config/config";
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
   // 1 Validation
@@ -19,12 +21,24 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     return next(error);
   }
 
+  // 2 Process
   //Password --> hash Will take more cpu time so await
   const hashedPassword = await bcrypt.hash(password, 10);
-  // 2 Process
+
+  const newUser = await userModel.create({
+    name,
+    email,
+    password: hashedPassword,
+  });
+
+  //Token generation JWT
+  const token = sign({ sub: newUser._id }, config.jwtSecret as string, {
+    expiresIn: "7d",
+    algorithm: "HS256",
+  });
   // 3 Response
 
-  res.json({ message: "User created" });
+  res.json({ accessToken: token });
 };
 
 export { createUser };
