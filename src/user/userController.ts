@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import createHttpError from "http-errors";
 import userModel from "./userModel";
-
+import bcrypt from "bcrypt";
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
   // 1 Validation
@@ -19,6 +19,8 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     return next(error);
   }
 
+  //Password --> hash Will take more cpu time so await
+  const hashedPassword = await bcrypt.hash(password, 10);
   // 2 Process
   // 3 Response
 
